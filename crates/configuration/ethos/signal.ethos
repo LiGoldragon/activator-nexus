@@ -1,0 +1,9 @@
+Library
+[ meta_signal_activator_nexus:[ Configuration ] ]
+[ ConfigurationFilePath.String
+  Compilation.{ ConfigurationFilePath Configuration }
+  CompilationOutcome.[ Compiled.ConfigurationFilePath CompileRefused.CompilationRefusal ]
+  CompilationRefusal.[ ArgumentCount NonUnicode RequestText.String
+                       InvalidPath.String Publication.String ] ]
+[]
+[]
