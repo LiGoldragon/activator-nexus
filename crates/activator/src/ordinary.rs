@@ -1,4 +1,4 @@
-//! The activator's ordinary Signal, answered only by target-local effects.
+//! The ordinary Signal, answered only by the activator's target-local effects.
 
 use signal_activator_nexus::{Query, Response};
 
