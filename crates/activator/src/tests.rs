@@ -237,3 +237,25 @@ fn invalid_configuration_replacement_preserves_the_previous_file() {
     assert!(file.replace(&fixture.configuration).is_err());
     assert_eq!(std::fs::read(file.path()).unwrap(), original);
 }
+
+#[tokio::test]
+async fn ordinary_signal_answers_activation_and_profile_observation() {
+    use crate::signal::Answerable as _;
+    use signal_activator_nexus::{Query, Response};
+    let fixture = Fixture::fixture("exit 0");
+    let activator = fixture.activator();
+    assert_eq!(
+        activator.answer(Query::Live).await,
+        Response::LiveRefused(LiveRefusal::NoLiveGeneration)
+    );
+    assert_eq!(
+        activator
+            .answer(Query::Activate(fixture.generation.clone()))
+            .await,
+        Response::Activated(fixture.generation.clone())
+    );
+    assert_eq!(
+        activator.answer(Query::Live).await,
+        Response::Live(fixture.generation)
+    );
+}
