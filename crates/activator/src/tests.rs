@@ -208,6 +208,23 @@ fn rejects_sockets_outside_the_session_runtime_directory() {
 }
 
 #[test]
+fn refuses_configuration_that_escapes_the_runtime_or_generation_directory() {
+    let mut fixture = Fixture::fixture("exit 0");
+    fixture.configuration.ordinary_socket_path.0 = format!(
+        "{}/../outside.sock",
+        fixture.configuration.runtime_directory.0
+    );
+    assert!(Activator::configured(fixture.configuration.clone()).is_err());
+    fixture.configuration.ordinary_socket_path.0 = format!(
+        "{}/ordinary.sock",
+        fixture.configuration.runtime_directory.0
+    );
+    fixture.configuration.activation_command.executable =
+        meta::Executable::GenerationRelativePath("../other/activate".into());
+    assert!(Activator::configured(fixture.configuration).is_err());
+}
+
+#[test]
 fn configuration_replacement_preserves_only_the_desired_configuration() {
     use crate::configuration::{ConfigurationFile, ConfigurationStorage as _};
     let mut fixture = Fixture::fixture("exit 0");

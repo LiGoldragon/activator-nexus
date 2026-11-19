@@ -195,8 +195,13 @@ impl Configurable for Activator {
             &configuration.ordinary_socket_path.0,
             &configuration.meta_socket_path.0,
         ] {
-            if !Path::new(path).is_absolute() {
-                return Err("configured paths must be absolute".into());
+            if !Path::new(path).is_absolute()
+                || path.contains('\0')
+                || Path::new(path)
+                    .components()
+                    .any(|part| matches!(part, Component::ParentDir))
+            {
+                return Err("configured paths must be absolute and normalized".into());
             }
         }
         let runtime = Path::new(&configuration.runtime_directory.0);
@@ -212,6 +217,33 @@ impl Configurable for Activator {
         }
         if configuration.ordinary_socket_path.0 == configuration.meta_socket_path.0 {
             return Err("ordinary and meta sockets must be distinct".into());
+        }
+        let commands: [&dyn Expandable; 3] = [
+            &configuration.validation_command,
+            &configuration.activation_command,
+            &configuration.profile_command,
+        ];
+        for command in commands {
+            match command.executable() {
+                Executable::ProgramPath(path)
+                    if Path::new(&path.0).is_absolute() && !path.0.contains('\0') => {}
+                Executable::GenerationRelativePath(path)
+                    if !path.is_empty()
+                        && !path.contains('\0')
+                        && Path::new(path)
+                            .components()
+                            .all(|part| matches!(part, Component::Normal(_))) => {}
+                _ => {
+                    return Err(
+                        "configured executable must be absolute or generation-relative".into(),
+                    );
+                }
+            }
+            for argument in command.arguments() {
+                if matches!(argument, Argument::Literal(text) if text.0.contains('\0')) {
+                    return Err("configured arguments must be valid process arguments".into());
+                }
+            }
         }
         Ok(Self {
             configuration,
