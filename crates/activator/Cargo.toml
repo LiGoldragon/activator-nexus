@@ -10,9 +10,10 @@ publish = false
 signal-activator-nexus = { git = "https://github.com/LiGoldragon/signal-activator-nexus", rev = "36c7fbc5992d79213e636bf6f02dbf22b1d91059" }
 meta-signal-activator-nexus = { git = "https://github.com/LiGoldragon/meta-signal-activator-nexus", rev = "d3e8ef6df89a9117506e341e249f125b1274d847" }
 tokio = { version = "1", features = ["fs", "process", "sync"] }
+signal = { git = "https://github.com/LiGoldragon/signal", rev = "6d4eb74a238ea4a6149bd12c42a8c06aec01b154", default-features = false }
+tempfile = "3"
 
 [dev-dependencies]
-tempfile = "3"
 tokio = { version = "1", features = ["macros", "rt", "time", "io-util"] }
 
 [lints.rust]

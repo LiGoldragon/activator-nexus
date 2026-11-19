@@ -206,3 +206,34 @@ fn rejects_sockets_outside_the_session_runtime_directory() {
         .to_string();
     assert!(Activator::configured(fixture.configuration).is_err());
 }
+
+#[test]
+fn configuration_replacement_preserves_only_the_desired_configuration() {
+    use crate::configuration::{ConfigurationFile, ConfigurationStorage as _};
+    let mut fixture = Fixture::fixture("exit 0");
+    let path = fixture.directory.path().join("configuration.signal");
+    let file = ConfigurationFile::at_path(path);
+    file.replace(&fixture.configuration).unwrap();
+    assert_eq!(file.read().unwrap(), fixture.configuration);
+    fixture.configuration.profile_path.0 = fixture
+        .directory
+        .path()
+        .join("changed-profile")
+        .display()
+        .to_string();
+    file.replace(&fixture.configuration).unwrap();
+    assert_eq!(file.read().unwrap(), fixture.configuration);
+    assert!(!fixture.profile().exists());
+}
+
+#[test]
+fn invalid_configuration_replacement_preserves_the_previous_file() {
+    use crate::configuration::{ConfigurationFile, ConfigurationStorage as _};
+    let mut fixture = Fixture::fixture("exit 0");
+    let file = ConfigurationFile::at_path(fixture.directory.path().join("configuration.signal"));
+    file.replace(&fixture.configuration).unwrap();
+    let original = std::fs::read(file.path()).unwrap();
+    fixture.configuration.ordinary_socket_path.0 = "relative.sock".into();
+    assert!(file.replace(&fixture.configuration).is_err());
+    assert_eq!(std::fs::read(file.path()).unwrap(), original);
+}
